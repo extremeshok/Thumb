@@ -32,6 +32,18 @@ Firstly, make sure your cache directory is writable, then access the script like
         <td>Width and/or height must be between 8 and 1500</td>
     </tr>
     <tr>
+        <td>bg</td>
+        <td>000 or 000000</td>
+        <td>ffffff</td>
+        <td>Set the background color of the whitespace<br />use either 6 character hex or 3 character hex</td>
+    </tr>
+    <tr>
+        <td>cache</td>
+        <td>0 - 1</td>
+        <td>1</td>
+        <td>0 = Disables the file and browser caching<br />1 = Enables file and browser caching</td>
+    </tr>
+    <tr>
         <td>crop</td>
         <td>0 - 1</td>
         <td>1</td>
@@ -111,6 +123,9 @@ If you're dealing with images straight from a camera, some may contain [EXIF](ht
 To enable this feature, change the constant `ADJUST_ORIENTATION` to `true`.
 
 More information, and an in depth analysis of EXIF Orientation can be found [in this article](http://www.daveperrett.com/articles/2012/07/28/exif-orientation-handling-is-a-ghetto/) written by @[daveperrett](http://www.twitter.com/daveperrett)
+
+##Enhancements
+Adrian Jon Kriel :: [eXtremeSHOK.com](https://extremeshok.com)
 
 ##License
 
