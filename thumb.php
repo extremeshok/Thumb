@@ -5,11 +5,40 @@ Title:      Thumb.php
 URL:        http://github.com/jamiebicknell/Thumb
 Author:     Jamie Bicknell
 Twitter:    @jamiebicknell
+
+Enhancements by Adrian Jon Kriel :: admin@extremeshok.com
 */
+
+
+function hex2rgb($hex) {
+   $hex = str_replace("#", "", $hex);
+
+   if(strlen($hex) == 3) {
+      $r = hexdec(substr($hex,0,1).substr($hex,0,1));
+      $g = hexdec(substr($hex,1,1).substr($hex,1,1));
+      $b = hexdec(substr($hex,2,1).substr($hex,2,1));
+   } else {
+      $r = hexdec(substr($hex,0,2));
+      $g = hexdec(substr($hex,2,2));
+      $b = hexdec(substr($hex,4,2));
+   }
+   $rgb = array($r, $g, $b);
+   //return implode(",", $rgb); // returns the rgb values separated by commas
+   return $rgb; // returns an array with the rgb values
+}
+
+function rgb2hex($rgb) {
+   $hex = "#";
+   $hex .= str_pad(dechex($rgb[0]), 2, "0", STR_PAD_LEFT);
+   $hex .= str_pad(dechex($rgb[1]), 2, "0", STR_PAD_LEFT);
+   $hex .= str_pad(dechex($rgb[2]), 2, "0", STR_PAD_LEFT);
+
+   return $hex; // returns the hex value including the number sign (#)
+}
+
 
 define('THUMB_CACHE',           './cache/');    // Path to cache directory (must be writeable)
 define('THUMB_CACHE_AGE',       86400);         // Duration of cached files in seconds
-define('THUMB_BROWSER_CACHE',   true);          // Browser cache true or false
 define('SHARPEN_MIN',           12);            // Minimum sharpen value
 define('SHARPEN_MAX',           28);            // Maximum sharpen value
 define('ADJUST_ORIENTATION',    true);          // Auto adjust orientation for JPEG true or false
@@ -25,8 +54,34 @@ $gray = isset($_GET['gray']) ? max(0, min(1, $_GET['gray'])) : 0;
 $ignore = isset($_GET['ignore']) ? max(0, min(1, $_GET['ignore'])) : 0;
 $path = parse_url($src);
 
+if(isset($_GET['bg'])){
+	$bgcolor = $_GET['bg'];
+	if((strlen($bgcolor) != 3) && (strlen($bgcolor) != 6 )){
+		$bgcolor = 'ffffff'; #white
+	}
+} else{
+	$bgcolor = 'ffffff'; #white
+}
+
+if(isset($_GET['cache'])){
+	if($_GET['cache'] == '0'){
+		$docache = false;
+	}else{
+		$docache = true;
+	}
+} else{
+	$docache = true;
+}
+
+if($docache){
+	define('THUMB_BROWSER_CACHE',   true);          // Browser cache true
+}else{
+	define('THUMB_BROWSER_CACHE',   false);          // Browser cache false
+}
+
+
 if (isset($path['scheme'])) {
-    $base = parse_url('http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+    $base = parse_url('https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
     if (preg_replace('/^www\./i', '', $base['host']) == preg_replace('/^www\./i', '', $path['host'])) {
         $base = explode('/', preg_replace('/\/+/', '/', $base['path']));
         $path = explode('/', preg_replace('/\/+/', '/', $path['path']));
@@ -66,7 +121,7 @@ $file_size = filesize($src);
 $file_time = filemtime($src);
 $file_date = gmdate('D, d M Y H:i:s T', $file_time);
 $file_type = strtolower(substr(strrchr($src, '.'), 1));
-$file_hash = md5($file_salt . ($src.$size.$crop.$trim.$zoom.$align.$sharpen.$gray.$ignore) . $file_time);
+$file_hash = md5($file_salt . ($src.$size.$crop.$trim.$zoom.$align.$sharpen.$gray.$ignore.$bgcolor) . $file_time);
 $file_temp = THUMB_CACHE . $file_hash . '.img.txt';
 $file_name = basename(substr($src, 0, strrpos($src, '.')) . strtolower(strrchr($src, '.')));
 
@@ -98,7 +153,7 @@ if (THUMB_BROWSER_CACHE && (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) || isset($
     }
 }
 
-if (!file_exists($file_temp)) {
+if ((!file_exists($file_temp)) || (!$docache)) {
     list($w0, $h0, $type) = getimagesize($src);
     $data = file_get_contents($src);
     if ($ignore && $type == 1) {
@@ -220,7 +275,10 @@ if (!file_exists($file_temp)) {
     $x = strpos($align, 'l') !== false ? 0 : (strpos($align, 'r') !== false ? $w - $w1 : ($w - $w1) / 2);
     $y = strpos($align, 't') !== false ? 0 : (strpos($align, 'b') !== false ? $h - $h1 : ($h - $h1) / 2);
     $im = imagecreatetruecolor($w, $h);
-    $bg = imagecolorallocate($im, 255, 255, 255);
+
+    $bgcolor=hex2rgb($bgcolor);
+    $bg = imagecolorallocate($im, $bgcolor[0], $bgcolor[1], $bgcolor[2]); //#9ad9ea
+
     imagefill($im, 0, 0, $bg);
     switch ($type) {
         case 1:
